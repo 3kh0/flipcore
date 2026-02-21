@@ -23,6 +23,9 @@ interface GameState {
 
 export async function init(canvas: HTMLCanvasElement, state: GameState) {
   const THREE = await import("three");
+  const { EffectComposer } = await import("three/addons/postprocessing/EffectComposer.js");
+  const { RenderPass } = await import("three/addons/postprocessing/RenderPass.js");
+  const { ShaderPass } = await import("three/addons/postprocessing/ShaderPass.js");
 
   let fpsFrames = 0;
   let fpsTime = performance.now();
@@ -38,6 +41,45 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   const dirLight = new THREE.DirectionalLight("#ffffff", 1.2);
   dirLight.position.set(5, 20, -5);
   scene.add(dirLight);
+
+  // thx threejs demos
+  const vhsShader = {
+    uniforms: {
+      tDiffuse: { value: null },
+      time: { value: 0 },
+      resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    },
+    vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse;
+      uniform float time;
+      uniform vec2 resolution;
+      varying vec2 vUv;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      void main() {
+        float jitter = (hash(vec2(time * 10.0, floor(vUv.y * resolution.y))) - 0.5) * 0.002;
+        vec2 uv = vUv;
+        uv.x += jitter;
+        float aberration = 0.003;
+        float r = texture2D(tDiffuse, vec2(uv.x + aberration, uv.y)).r;
+        float g = texture2D(tDiffuse, uv).g;
+        float b = texture2D(tDiffuse, vec2(uv.x - aberration, uv.y)).b;
+        vec3 color = vec3(r, g, b);
+        float scanline = sin(vUv.y * resolution.y * 3.14159) * 0.08;
+        color -= scanline;
+        float noise = (hash(vUv + fract(time)) - 0.5) * 0.08;
+        color += noise;
+        float vignette = 1.0 - smoothstep(0.4, 1.4, length(vUv - 0.5) * 2.0);
+        color *= vignette;
+        color.r *= 1.05;
+        color.b *= 0.95;
+        gl_FragColor = vec4(color, 1.0);
+      }`,
+  };
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const vhsPass = new ShaderPass(vhsShader);
+  composer.addPass(vhsPass);
 
   // environment
   const { starGeo, starCount } = stars(THREE, scene);
@@ -167,7 +209,8 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
         a.rotation.z += dt * 0.3;
         a.position.y = a.userData.baseY + Math.sin(a.userData.phase) * 0.4;
       }
-      renderer.render(scene, camera);
+      vhsPass.uniforms.time.value = clock.getElapsedTime();
+      composer.render();
       fpsFrames++;
       const now = performance.now();
       if (now - fpsTime >= 1000) { state.fps.value = fpsFrames; fpsFrames = 0; fpsTime = now; }
@@ -176,7 +219,8 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
 
     if (state.dead.value) {
       updateExplosion(dt);
-      renderer.render(scene, camera);
+      vhsPass.uniforms.time.value = clock.getElapsedTime();
+      composer.render();
       fpsFrames++;
       const now = performance.now();
       if (now - fpsTime >= 1000) { state.fps.value = fpsFrames; fpsFrames = 0; fpsTime = now; }
@@ -313,7 +357,8 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     starGeo.attributes.position.needsUpdate = true;
 
 
-    renderer.render(scene, camera);
+    vhsPass.uniforms.time.value = clock.getElapsedTime();
+    composer.render();
     fpsFrames++;
     const now2 = performance.now();
     if (now2 - fpsTime >= 1000) { state.fps.value = fpsFrames; fpsFrames = 0; fpsTime = now2; }
@@ -323,6 +368,8 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   function resize() {
     const w = window.innerWidth, h = window.innerHeight;
     renderer.setSize(w, h, false);
+    composer.setSize(w, h);
+    vhsPass.uniforms.resolution.value.set(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
@@ -330,6 +377,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   function reset() {
     pos.set(0, 0, 0); vel.set(0, 0, 0);
     rocket.quaternion.identity();
+    rocket.position.copy(pos);
     rocket.visible = true;
     tunnel.center.set(0, 0, 0); tunnel.dir.set(0, 0, -1);
     gameTime = 0;

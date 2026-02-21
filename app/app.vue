@@ -5,10 +5,9 @@
 
     <div v-if="!started" class="fixed inset-0 flex flex-col items-center justify-center bg-black/80 z-50 cursor-pointer" @click="started = true">
       <h1 class="text-5xl font-bold text-white mb-2 tracking-tight">FLIPCORE</h1>
-      <p class="text-lg text-white/50 mb-6">Your ship flies forward — toggle boosters to steer</p>
+      <p class="text-lg text-white/50 mb-6">A infinite ship runner with 4 simple inputs.</p>
       <div class="text-white/60 font-mono text-sm space-y-1 text-center mb-8">
         <p>Keys <span class="text-red-400 font-bold">1</span> <span class="text-yellow-300 font-bold">2</span> <span class="text-blue-400 font-bold">3</span> <span class="text-green-400 font-bold">4</span> — tilt ship</p>
-        <p>SPACE — kill all</p>
         <p>R — reset pos</p>
       </div>
       <p class="text-white/30 animate-pulse">Click or press any key to launch</p>

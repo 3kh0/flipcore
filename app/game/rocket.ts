@@ -17,37 +17,37 @@ export interface EnginePart {
 
 export function nasa(THREE: THREE) {
   const rocket = new THREE.Group();
-  const bodyMat = new THREE.MeshStandardMaterial({ color: "#b8b8c0", metalness: 0.55, roughness: 0.35, flatShading: true });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: "#dcdce8", emissive: "#334", emissiveIntensity: 0.3, metalness: 0.55, roughness: 0.35, flatShading: true });
 
   const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.48, 2.6, 8), bodyMat);
   fuselage.rotation.x = Math.PI / 2;
   rocket.add(fuselage);
 
-  const noseMat = new THREE.MeshStandardMaterial({ color: "#cc2222", metalness: 0.5, roughness: 0.3, flatShading: true });
+  const noseMat = new THREE.MeshStandardMaterial({ color: "#ff3333", emissive: "#661111", emissiveIntensity: 0.4, metalness: 0.5, roughness: 0.3, flatShading: true });
   const nose = new THREE.Mesh(new THREE.ConeGeometry(0.4, 1.2, 8), noseMat);
   nose.rotation.x = -Math.PI / 2;
   nose.position.z = -1.9;
   rocket.add(nose);
 
-  const bellMat = new THREE.MeshStandardMaterial({ color: "#555", metalness: 0.7, roughness: 0.3, flatShading: true });
+  const bellMat = new THREE.MeshStandardMaterial({ color: "#888", emissive: "#222", emissiveIntensity: 0.3, metalness: 0.7, roughness: 0.3, flatShading: true });
   const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.52, 0.5, 8, 1, true), bellMat);
   bell.rotation.x = Math.PI / 2;
   bell.position.z = 1.55;
   rocket.add(bell);
 
   const coreMat = new THREE.MeshStandardMaterial({
-    color: "#4488ff", emissive: "#223388", emissiveIntensity: 0.7, metalness: 0.6, roughness: 0.25,
+    color: "#66aaff", emissive: "#3355cc", emissiveIntensity: 1.0, metalness: 0.6, roughness: 0.25,
   });
   const coreStripe = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.12, 8), coreMat);
   coreStripe.rotation.x = Math.PI / 2;
   coreStripe.position.z = -0.5;
   rocket.add(coreStripe);
 
-  const coreLight = new THREE.PointLight("#4488ff", 0.6, 8);
+  const coreLight = new THREE.PointLight("#4488ff", 1.2, 10);
   coreLight.position.set(0, 0.5, -0.5);
   rocket.add(coreLight);
 
-  const finMat = new THREE.MeshStandardMaterial({ color: "#999", metalness: 0.5, roughness: 0.4, flatShading: true });
+  const finMat = new THREE.MeshStandardMaterial({ color: "#bbb", emissive: "#222", emissiveIntensity: 0.2, metalness: 0.5, roughness: 0.4, flatShading: true });
   for (let i = 0; i < 4; i++) {
     const a = (i * Math.PI) / 2 + Math.PI / 4;
     const fin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.5, 0.55), finMat);
@@ -74,7 +74,7 @@ export function nasa(THREE: THREE) {
 
   const exh = new THREE.Group();
   exh.add(exhaustCone, exhaustOuter);
-  const exhLight = new THREE.PointLight("#4488ff", 1.2, 8);
+  const exhLight = new THREE.PointLight("#4488ff", 2.0, 12);
   exhLight.position.z = 2.0;
   exh.add(exhLight);
   rocket.add(exh);
