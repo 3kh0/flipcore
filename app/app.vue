@@ -7,7 +7,7 @@
       <h1 class="text-5xl font-bold text-white mb-2 tracking-tight">FLIPCORE</h1>
       <p class="text-lg text-white/50 mb-6">Your ship flies forward — toggle boosters to steer</p>
       <div class="text-white/60 font-mono text-sm space-y-1 text-center mb-8">
-        <p>Keys <span class="text-red-400 font-bold">1</span> <span class="text-yellow-300 font-bold">2</span> <span class="text-blue-400 font-bold">3</span> <span class="font-bold">4</span> — tilt ship</p>
+        <p>Keys <span class="text-red-400 font-bold">1</span> <span class="text-yellow-300 font-bold">2</span> <span class="text-blue-400 font-bold">3</span> <span class=" text-green-400 font-bold">4</span> — tilt ship</p>
         <p>SPACE — kill all</p>
         <p>R — reset pos</p>
       </div>
@@ -57,7 +57,7 @@ const btns = [
   { name: 'top', key: '2', arrow: '▼', row: 1, col: 2, on: 'border-yellow-400 bg-yellow-400/20 text-yellow-300 shadow-[0_0_16px_rgba(250,204,21,0.5)]' },
   { name: 'left', key: '1', arrow: '►', row: 2, col: 1, on: 'border-red-400 bg-red-400/20 text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.5)]' },
   { name: 'right', key: '3', arrow: '◄', row: 2, col: 3, on: 'border-blue-400 bg-blue-400/20 text-blue-300 shadow-[0_0_16px_rgba(96,165,250,0.5)]' },
-  { name: 'bottom', key: '4', arrow: '▲', row: 3, col: 2, on: 'border-gray-200 bg-white/15 text-white shadow-[0_0_16px_rgba(255,255,255,0.35)]' },
+  { name: 'bottom', key: '4', arrow: '▲', row: 3, col: 2, on: 'border-green-400 bg-green-400/20 text-green-300 shadow-[0_0_16px_rgba(132,225,255,0.5)]' },
 ];
 
 function toggle(name) {
