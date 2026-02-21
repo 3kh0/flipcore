@@ -43,13 +43,20 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useGameState, BTNS } from "./composables/useGameState";
 import { init } from "./game/engine";
 
 const canvasEl = ref(null);
 const btns = BTNS;
 const { score, speed, started, tunnelWarning, engines, kill, toggle } = useGameState();
+
+useHead({
+  title: "Flipcore",
+  meta: [
+    { name: "description", content: "ship game go brrr" },
+    { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+  ],
+});
 
 let cleanup = () => {};
 
