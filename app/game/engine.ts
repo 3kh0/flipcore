@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 import { nasa } from "./rocket";
-import { stars, buildRings } from "./environment";
+import { stars, buildRings, buildTunnelWalls } from "./environment";
 import { lockheed, type TunnelState } from "./targets";
 import {
   FORWARD_THRUST, DRAG, MAX_SPEED, TURN_RATE,
@@ -34,6 +34,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   const camera = new THREE.PerspectiveCamera(55, 2, 0.1, 800);
 
   scene.add(new THREE.AmbientLight("#1a1a2e", 0.8));
+  scene.fog = new THREE.Fog("#000000", 25, 100);
   const dirLight = new THREE.DirectionalLight("#ffffff", 1.2);
   dirLight.position.set(5, 20, -5);
   scene.add(dirLight);
@@ -42,6 +43,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   const { starGeo, starCount } = stars(THREE, scene);
   
   const { tunnelRings, ringMat, tunnelNormalColor, tunnelWarnColor } = buildRings(THREE, scene);
+  const { wallGroup, wallMat } = buildTunnelWalls(THREE, scene);
 
   // rocket
   const { rocket, exhaustCone, exhaustOuter, coreMat, coreLight, eParts } = nasa(THREE);
@@ -68,7 +70,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
 
   // targets
   const { targets, spawnBox, collectFX, updateFX } = lockheed(THREE, scene, tunnel, pos);
-  for (let i = 0; i < 8; i++) spawnBox();
+  for (let i = 0; i < 14; i++) spawnBox();
 
   // explosion!!!
   const EXPLODE_COUNT = 120; // increase for low fps
@@ -218,11 +220,14 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
       ? Math.min((lateralDist - TUNNEL_SOFT_EDGE) / (TUNNEL_RADIUS - TUNNEL_SOFT_EDGE), 1) : 0;
     state.tunnelWarning.value = w;
     ringMat.color.copy(tunnelNormalColor).lerp(tunnelWarnColor, w);
-    ringMat.opacity = 0.04 + w * 0.18;
+    ringMat.opacity = 0.1 + w * 0.25;
+    wallMat.color.copy(tunnelNormalColor).lerp(tunnelWarnColor, w);
+    wallMat.opacity = 0.08 + w * 0.2;
+    wallGroup.position.z = pos.z;
 
     // tunnel ring repositioning
     const playerAxialRing = _shipOffset.subVectors(pos, tunnel.center).dot(tunnel.dir);
-    const ringStep = 15;
+    const ringStep = 8;
     const ringBase = Math.ceil(playerAxialRing / ringStep) * ringStep;
     for (let i = 0; i < tunnelRings.length; i++) {
       const ringOffset = ringBase + i * ringStep;

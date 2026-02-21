@@ -18,7 +18,7 @@ export function lockheed(
   const fxList: { mesh: THREE_NS.Mesh; life: number }[] = [];
 
   function spawnBox(mesh?: THREE_NS.Mesh) {
-    const d = 25 + Math.random() * 40;
+    const d = 100 + Math.random() * 60;
     const a = Math.random() * Math.PI * 2;
     const r = Math.random() * TUNNEL_RADIUS * 0.6;
     const playerAxial = new THREE.Vector3().subVectors(pos, tunnel.center).dot(tunnel.dir);
