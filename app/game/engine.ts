@@ -81,6 +81,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   explodeGeo.setAttribute("color", new THREE.BufferAttribute(explodeColors, 3));
   const explodeMat = new THREE.PointsMaterial({ size: 0.35, vertexColors: true, transparent: true, opacity: 1, depthWrite: false });
   const explodePoints = new THREE.Points(explodeGeo, explodeMat);
+  explodePoints.frustumCulled = false;
   explodePoints.visible = false;
   scene.add(explodePoints);
   let explodeTimer = 0;
@@ -138,13 +139,9 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   const clock = new THREE.Clock();
   let raf = 0;
   const camTarget = new THREE.Vector3();
-  const frameDuration = 1000 / 60;
-  let lastFrameTime = 0;
 
-  function animate(time: number = 0) {
+  function animate() {
     raf = requestAnimationFrame(animate);
-    if (time - lastFrameTime < frameDuration) return;
-    lastFrameTime = time;
     gpad();
     const dt = Math.min(clock.getDelta(), 0.05);
 
@@ -194,11 +191,11 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     // physics
     _forward.set(0, 0, -1).applyQuaternion(rocket.quaternion);
     vel.addScaledVector(_forward, FORWARD_THRUST * dt);
-    vel.multiplyScalar(Math.max(0, 1 - DRAG * dt));
+    vel.multiplyScalar(Math.exp(-DRAG * dt));
     if (vel.length() > MAX_SPEED) vel.setLength(MAX_SPEED);
 
     const tfs = vel.dot(tunnel.dir);
-    if (tfs < 8) vel.addScaledVector(tunnel.dir, 8 - tfs);
+    if (tfs < 8) vel.addScaledVector(tunnel.dir, (8 - tfs) * (1 - Math.exp(-6 * dt)));
 
     pos.addScaledVector(vel, dt);
     rocket.position.copy(pos);
@@ -263,9 +260,9 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     // camera
     _camOffset.set(0, 5, 16).applyQuaternion(rocket.quaternion);
     camTarget.copy(pos).add(_camOffset);
-    camera.position.lerp(camTarget, 3 * dt);
+    camera.position.lerp(camTarget, 1 - Math.exp(-8 * dt));
     _camUp.set(0, 1, 0).applyQuaternion(rocket.quaternion);
-    camera.up.lerp(_camUp, 2 * dt).normalize();
+    camera.up.lerp(_camUp, 1 - Math.exp(-5 * dt)).normalize();
     _camLookAt.set(0, 0, -10).applyQuaternion(rocket.quaternion).add(pos);
     camera.lookAt(_camLookAt);
 
