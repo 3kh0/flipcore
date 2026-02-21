@@ -1,6 +1,6 @@
 export const FORWARD_THRUST = 12;
 export const DRAG = 0.5;
-export const MAX_SPEED = 35;
+export const MAX_SPEED = 100;
 export const TURN_RATE = 1.4;
 
 export const TUNNEL_RADIUS = 12;

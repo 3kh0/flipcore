@@ -141,6 +141,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   // game loop
   const clock = new THREE.Clock();
   let raf = 0;
+  let gameTime = 0;
   const camTarget = new THREE.Vector3();
 
   function animate() {
@@ -198,8 +199,10 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     }
 
     // physics
+    gameTime += dt;
+    const thrust = FORWARD_THRUST + (MAX_SPEED * DRAG - FORWARD_THRUST) * Math.min(gameTime / 300, 1);
     _forward.set(0, 0, -1).applyQuaternion(rocket.quaternion);
-    vel.addScaledVector(_forward, FORWARD_THRUST * dt);
+    vel.addScaledVector(_forward, thrust * dt);
     vel.multiplyScalar(Math.exp(-DRAG * dt));
     if (vel.length() > MAX_SPEED) vel.setLength(MAX_SPEED);
 
@@ -329,6 +332,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     rocket.quaternion.identity();
     rocket.visible = true;
     tunnel.center.set(0, 0, 0); tunnel.dir.set(0, 0, -1);
+    gameTime = 0;
     explodePoints.visible = false;
     explodeTimer = 0;
     for (const t of targets) spawnBox(t);
