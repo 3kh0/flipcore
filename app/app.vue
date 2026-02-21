@@ -54,10 +54,10 @@ const engines = reactive({ left: false, top: false, right: false, bottom: false 
 const kill = () => engines.left = engines.top = engines.right = engines.bottom = false;
 
 const btns = [
-  { name: 'top', key: '2', arrow: '▼', row: 1, col: 2, on: 'border-yellow-400 bg-yellow-400/20 text-yellow-300 shadow-[0_0_16px_rgba(250,204,21,0.5)]' },
-  { name: 'left', key: '1', arrow: '►', row: 2, col: 1, on: 'border-red-400 bg-red-400/20 text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.5)]' },
-  { name: 'right', key: '3', arrow: '◄', row: 2, col: 3, on: 'border-blue-400 bg-blue-400/20 text-blue-300 shadow-[0_0_16px_rgba(96,165,250,0.5)]' },
-  { name: 'bottom', key: '4', arrow: '▲', row: 3, col: 2, on: 'border-green-400 bg-green-400/20 text-green-300 shadow-[0_0_16px_rgba(132,225,255,0.5)]' },
+  { name: 'top', key: ['2', 'w'], arrow: '▼', row: 1, col: 2, on: 'border-yellow-400 bg-yellow-400/20 text-yellow-300 shadow-[0_0_16px_rgba(250,204,21,0.5)]' },
+  { name: 'left', key: ['1', 'a'], arrow: '►', row: 2, col: 1, on: 'border-red-400 bg-red-400/20 text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.5)]' },
+  { name: 'right', key: ['3', 'd'], arrow: '◄', row: 2, col: 3, on: 'border-blue-400 bg-blue-400/20 text-blue-300 shadow-[0_0_16px_rgba(96,165,250,0.5)]' },
+  { name: 'bottom', key: ['4', 's'], arrow: '▲', row: 3, col: 2, on: 'border-green-400 bg-green-400/20 text-green-300 shadow-[0_0_16px_rgba(132,225,255,0.5)]' },
 ];
 
 function toggle(name) {
@@ -446,15 +446,25 @@ onMounted(async () => {
     camera.updateProjectionMatrix();
   }
 
-  const keyMap = { "1": "left", "2": "top", "3": "right", "4": "bottom" };
+  const keyMap = btns.reduce((map, btn) => {
+    const keys = Array.isArray(btn.key) ? btn.key : [btn.key];
+    for (const key of keys) {
+      map[key.toLowerCase()] = btn.name;
+    }
+    return map;
+  }, {});
 
   const onKeyDown = (e) => {
     if (!started.value) { started.value = true; return; }
     if (e.repeat) return;
-    const eng = keyMap[e.key];
-    if (eng) engines[eng] = !engines[eng];
+    const pressed = e.key.toLowerCase();
+    const eng = keyMap[pressed];
+    if (eng) {
+      e.preventDefault();
+      engines[eng] = !engines[eng];
+    }
     if (e.key === " ") { e.preventDefault(); kill(); }
-    if (e.key.toLowerCase() === "r") {
+    if (pressed === "r") {
       pos.set(0, 0, 0); vel.set(0, 0, 0);
       rocket.quaternion.identity(); kill();
       tunnelCenter.set(0, 0, 0); tunnelDir.set(0, 0, -1);
