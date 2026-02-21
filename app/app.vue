@@ -27,7 +27,7 @@
           :class="engines[b.name] ? b.on : 'border-white/10 bg-white/5 text-white/20'"
           :style="{ gridRow: b.row, gridColumn: b.col }"
           @click="toggle(b.name)"
-        >{{ b.key }}<span class="text-[8px] leading-none">{{ b.arrow }}</span></div>
+        ><span class="text-[8px] leading-none">{{ b.arrow }}</span></div>
         <div class="w-9 h-9 border border-white/10 bg-white/3 flex items-center justify-center text-white/15 text-xs self-center justify-self-center" style="grid-row:2;grid-column:2">◆</div>
       </div>
     </div>
@@ -54,10 +54,10 @@ const engines = reactive({ left: false, top: false, right: false, bottom: false 
 const kill = () => engines.left = engines.top = engines.right = engines.bottom = false;
 
 const btns = [
-  { name: 'top', key: ['2', 'w'], arrow: '▼', row: 1, col: 2, on: 'border-yellow-400 bg-yellow-400/20 text-yellow-300 shadow-[0_0_16px_rgba(250,204,21,0.5)]' },
-  { name: 'left', key: ['1', 'a'], arrow: '►', row: 2, col: 1, on: 'border-red-400 bg-red-400/20 text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.5)]' },
-  { name: 'right', key: ['3', 'd'], arrow: '◄', row: 2, col: 3, on: 'border-blue-400 bg-blue-400/20 text-blue-300 shadow-[0_0_16px_rgba(96,165,250,0.5)]' },
-  { name: 'bottom', key: ['4', 's'], arrow: '▲', row: 3, col: 2, on: 'border-green-400 bg-green-400/20 text-green-300 shadow-[0_0_16px_rgba(132,225,255,0.5)]' },
+  { name: 'top', key: ['2', 's'], arrow: '▲', row: 1, col: 2, on: 'border-yellow-400 bg-yellow-400/20 text-yellow-300 shadow-[0_0_16px_rgba(250,204,21,0.5)]' },
+  { name: 'left', key: ['1', 'd'], arrow: '◄', row: 2, col: 1, on: 'border-red-400 bg-red-400/20 text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.5)]' },
+  { name: 'right', key: ['3', 'a'], arrow: '►', row: 2, col: 3, on: 'border-blue-400 bg-blue-400/20 text-blue-300 shadow-[0_0_16px_rgba(96,165,250,0.5)]' },
+  { name: 'bottom', key: ['4', 'w'], arrow: '▼', row: 3, col: 2, on: 'border-green-400 bg-green-400/20 text-green-300 shadow-[0_0_16px_rgba(132,225,255,0.5)]' },
 ];
 
 function toggle(name) {
