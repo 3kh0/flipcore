@@ -10,6 +10,10 @@
         <p>Keys <span class="text-red-400 font-bold">1</span> <span class="text-yellow-300 font-bold">2</span> <span class="text-blue-400 font-bold">3</span> <span class="text-green-400 font-bold">4</span> — tilt ship</p>
         <p>R — reset pos</p>
       </div>
+      <div class="mb-6 flex items-center gap-3 cursor-auto pointer-events-auto">
+        <input type="checkbox" v-model="enableOwos" id="owoCheckbox" class="w-4 h-4 accent-pink-500 cursor-pointer">
+        <label for="owoCheckbox" class="text-white/70 font-mono text-sm select-none cursor-pointer">OwO, what's this?</label>
+      </div>
       <p class="text-white/30 animate-pulse">Click or press any key to launch</p>
     </div>
 
@@ -53,7 +57,7 @@ import { init } from "./game/engine";
 
 const canvasEl = ref(null);
 const btns = BTNS;
-const { score, speed, fps, started, tunnelWarning, dead, engines, kill, toggle, restart } = useGameState();
+const { score, speed, fps, started, tunnelWarning, dead, engines, enableOwos, kill, toggle, restart } = useGameState();
 
 useHead({
   title: "Flipcore",
@@ -67,7 +71,7 @@ let cleanup = () => {};
 
 onMounted(async () => {
   if (!canvasEl.value) return;
-  cleanup = await init(canvasEl.value, { engines, score, speed, fps, started, tunnelWarning, dead, kill, restart });
+  cleanup = await init(canvasEl.value, { engines, score, speed, fps, started, tunnelWarning, dead, enableOwos, kill, restart });
 });
 
 onBeforeUnmount(() => cleanup());
