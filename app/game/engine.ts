@@ -16,6 +16,7 @@ interface GameState {
   started: Ref<boolean>;
   tunnelWarning: Ref<number>;
   dead: Ref<boolean>;
+  enableOwos: Ref<boolean>;
   fps: Ref<number>;
   kill: () => void;
   restart: () => void;
@@ -192,7 +193,9 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
       });
     }
   }
-  for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
+  if (state.enableOwos.value) {
+    for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
+  }
   // spawn tomatoes and ensure visibility
   for (let i = 0; i < 6; i++) {
     const t = spawnTomato();
@@ -430,24 +433,26 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     }
 
     // owos
-    for (const o of owoWhatAreThese) {
-      o.userData.phase += dt * 0.8;
-      if (o.userData.billboardMode) {
-        // Face the camera
-        o.lookAt(camera.position);
-      } else {
-        o.rotation.x += dt * 0.5;
-        o.rotation.z += dt * 0.3;
-      }
-      o.position.y = o.userData.baseY + Math.sin(o.userData.phase) * 0.4;
-      if (pos.distanceTo(o.position) < 2) {
-        // Play owo sound
-        if (owoSound.isPlaying) owoSound.stop();
-        owoSound.play();
-        // Respawn the owo
-        spawnOwoWhatsThis(o);
-      } else if (_shipOffset.subVectors(o.position, pos).dot(_forward) < -30) {
-        spawnOwoWhatsThis(o);
+    if (state.enableOwos.value) {
+      for (const o of owoWhatAreThese) {
+        o.userData.phase += dt * 0.8;
+        if (o.userData.billboardMode) {
+          // Face the camera
+          o.lookAt(camera.position);
+        } else {
+          o.rotation.x += dt * 0.5;
+          o.rotation.z += dt * 0.3;
+        }
+        o.position.y = o.userData.baseY + Math.sin(o.userData.phase) * 0.4;
+        if (pos.distanceTo(o.position) < 2) {
+          // Play owo sound
+          if (owoSound.isPlaying) owoSound.stop();
+          owoSound.play();
+          // Respawn the owo
+          spawnOwoWhatsThis(o);
+        } else if (_shipOffset.subVectors(o.position, pos).dot(_forward) < -30) {
+          spawnOwoWhatsThis(o);
+        }
       }
     }
 
@@ -571,7 +576,9 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     // respawn initial obstacles
     for (let i = 0; i < 16; i++) spawnBox();
     for (let i = 0; i < 10; i++) spawnAsteroid();
-    for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
+    if (state.enableOwos.value) {
+      for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
+    }
     for (let i = 0; i < 8; i++) spawnTomato();
 
     state.restart();

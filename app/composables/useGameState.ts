@@ -14,6 +14,7 @@ export function useGameState() {
   const started = ref(false);
   const tunnelWarning = ref(0);
   const dead = ref(false);
+  const enableOwos = ref(false);
   const engines = reactive({ left: false, top: false, right: false, bottom: false });
 
   function kill() {
@@ -34,5 +35,5 @@ export function useGameState() {
     kill();
   }
 
-  return { score, speed, fps, started, tunnelWarning, dead, engines, kill, toggle, restart };
+  return { score, speed, fps, started, tunnelWarning, dead, engines, enableOwos, kill, toggle, restart };
 }
