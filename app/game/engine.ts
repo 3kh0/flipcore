@@ -118,6 +118,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   camera.add(audioListener);
   const owoSound = new THREE.Audio(audioListener);
   const crashSound = new THREE.Audio(audioListener);
+  const splatSound = new THREE.Audio(audioListener);
   const audioLoader = new THREE.AudioLoader();
   audioLoader.load(new URL("../assets/owo.wav", import.meta.url).href, (audioBuffer) => {
     owoSound.setBuffer(audioBuffer);
@@ -126,6 +127,10 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   audioLoader.load(new URL("../assets/fahh.mp3", import.meta.url).href, (audioBuffer) => {
     crashSound.setBuffer(audioBuffer);
     crashSound.setVolume(0.7);
+  });
+  audioLoader.load(new URL("../assets/splat.mp3", import.meta.url).href, (audioBuffer) => {
+    splatSound.setBuffer(audioBuffer);
+    splatSound.setVolume(0.6);
   });
 
   // splat image (for tomato hits)
@@ -189,7 +194,7 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
   }
   for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
   // spawn tomatoes and ensure visibility
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) {
     const t = spawnTomato();
     if (t) {
       t.visible = true;
@@ -458,9 +463,12 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
       }
       t.position.y = t.userData.baseY + Math.sin(t.userData.phase) * 0.4;
       if (pos.distanceTo(t.position) < 2) {
+        // Play splat sound
+        if (splatSound.isPlaying) splatSound.stop();
+        splatSound.play();
         // spawn a screen splat for tomato hits
         spawnSplat();
-        // Respawn the tomato (no sound)
+        // Respawn the tomato
         spawnTomato(t);
       } else if (_shipOffset.subVectors(t.position, pos).dot(_forward) < -30) {
         spawnTomato(t);

@@ -195,8 +195,8 @@ export function lockheed(
     outerMesh.frustumCulled = false;
     outerMesh.renderOrder = 1;
 
-    // Solid core - a smaller, darker sphere to make the asteroid look dense
-    const coreGeo = new THREE.SphereGeometry(size * 0.55, 16, 12);
+    // Solid core - a larger, darker sphere to make the asteroid look dense and substantial
+    const coreGeo = new THREE.SphereGeometry(size * 0.95, 16, 12);
     const coreMat = new THREE.MeshStandardMaterial({
       color: "#9b7f55",
       roughness: 0.9,
