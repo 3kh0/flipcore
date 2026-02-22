@@ -40,7 +40,7 @@
       :style="{ boxShadow: `inset 0 0 ${60 + tunnelWarning * 100}px rgba(255,40,40,${tunnelWarning * 0.45})` }" />
 
     <div v-if="dead" class="fixed inset-0 flex flex-col items-center justify-center bg-black/70 z-50">
-      <p class="text-red-500 text-6xl font-bold mb-4 tracking-widest">AH F**K!</p>
+      <p class="text-red-500 text-6xl font-bold mb-4 tracking-widest">u suck lmao</p>
       <p class="text-white/50 text-lg mb-2">Score: <span class="text-white font-bold text-2xl">{{ score }}</span></p>
       <p class="text-white/30 text-sm mt-6 animate-pulse">Press R or click to restart</p>
     </div>
