@@ -32,12 +32,15 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  // optional: slightly raise exposure for visibility
+  renderer.toneMappingExposure = 1.0;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(55, 2, 0.1, 800);
 
   scene.add(new THREE.AmbientLight("#1a1a2e", 0.8));
-  scene.fog = new THREE.Fog("#000000", 25, 100);
+  scene.fog = new THREE.Fog("#000000", 5, 300);
   const dirLight = new THREE.DirectionalLight("#ffffff", 1.2);
   dirLight.position.set(5, 20, -5);
   scene.add(dirLight);
@@ -110,10 +113,94 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     dir: new THREE.Vector3(0, 0, -1),
   };
 
+  // audio
+  const audioListener = new THREE.AudioListener();
+  camera.add(audioListener);
+  const owoSound = new THREE.Audio(audioListener);
+  const crashSound = new THREE.Audio(audioListener);
+  const audioLoader = new THREE.AudioLoader();
+  audioLoader.load(new URL("../assets/owo.wav", import.meta.url).href, (audioBuffer) => {
+    owoSound.setBuffer(audioBuffer);
+    owoSound.setVolume(0.5);
+  });
+  audioLoader.load(new URL("../assets/fahh.mp3", import.meta.url).href, (audioBuffer) => {
+    crashSound.setBuffer(audioBuffer);
+    crashSound.setVolume(0.7);
+  });
+
+  // splat image (for tomato hits)
+  const splatUrl = new URL("../assets/splat.png", import.meta.url).href;
+  function spawnSplat() {
+    try {
+      const dur = 2000 + Math.floor(Math.random() * 1000); // 2000-3000ms
+      const img = document.createElement('img');
+      img.src = splatUrl;
+      img.style.position = 'fixed';
+      img.style.pointerEvents = 'none';
+      img.style.zIndex = '9999';
+      // random size between 48 and 220px
+      const size = 500+ Math.floor(Math.random() * 200);
+      img.style.width = size + 'px';
+      img.style.height = 'auto';
+      // random position but keep fully on screen
+      const vw = Math.max(window.innerWidth || 0, 0);
+      const vh = Math.max(window.innerHeight || 0, 0);
+      const left = Math.floor(Math.random() * Math.max(1, vw - size));
+      const top = Math.floor(Math.random() * Math.max(1, vh - size));
+      img.style.left = left + 'px';
+      img.style.top = top + 'px';
+      img.style.opacity = '1';
+      img.style.transition = `opacity ${dur}ms ease-out, transform ${dur}ms ease-out`;
+      // slight random rotation for variety
+      const rot = (Math.random() - 0.5) * 60; // -30 to +30 deg
+      img.style.transform = `rotate(${rot}deg)`;
+      document.body.appendChild(img);
+      // trigger fade-out on next frame
+      requestAnimationFrame(() => {
+        img.style.opacity = '0';
+        // optionally scale down/up slightly
+        img.style.transform = `rotate(${rot}deg) scale(${0.8 + Math.random() * 0.6})`;
+      });
+      // remove after duration + small buffer
+      setTimeout(() => {
+        if (img.parentNode) img.parentNode.removeChild(img);
+      }, dur + 100);
+    } catch (e) {
+      // ignore DOM errors in non-browser environment
+      // console.warn('spawnSplat failed', e);
+    }
+  }
+
   // targets
-  const { targets, asteroids, spawnBox, spawnAsteroid, collectFX, updateFX } = lockheed(THREE, scene, tunnel, pos);
-  for (let i = 0; i < 14; i++) spawnBox();
-  for (let i = 0; i < 8; i++) spawnAsteroid();
+  const { targets, asteroids, owoWhatAreThese, tomatoes, spawnBox, spawnAsteroid, spawnOwoWhatsThis, spawnTomato, collectFX, updateFX, resetSpawnState } = lockheed(THREE, scene, tunnel, pos);
+  for (let i = 0; i < 16; i++) spawnBox();
+  // spawn asteroids and ensure they're visible
+  for (let i = 0; i < 10; i++) {
+    const a = spawnAsteroid();
+    if (a) {
+      a.visible = true;
+      a.traverse((o: any) => {
+        if (o.isMesh) {
+          o.frustumCulled = false;
+          if (o.material) try { o.material.side = THREE.DoubleSide; } catch (e) {}
+        }
+      });
+    }
+  }
+  for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
+  // spawn tomatoes and ensure visibility
+  for (let i = 0; i < 8; i++) {
+    const t = spawnTomato();
+    if (t) {
+      t.visible = true;
+      t.traverse((o: any) => {
+        if (o.isMesh) {
+          o.frustumCulled = false;
+          if (o.material) try { o.material.side = THREE.DoubleSide; } catch (e) {}
+        }
+      });
+    }
+  }
 
   // explosion!!!
   const EXPLODE_COUNT = 120; // increase for low fps
@@ -177,6 +264,9 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
       state.kill();
       triggerExplosion(pos.clone());
       rocket.visible = false;
+      if (owoSound.isPlaying) owoSound.stop();
+      if (crashSound.isPlaying) crashSound.stop();
+      crashSound.play();
     }
   }
 
@@ -325,9 +415,55 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
         state.kill();
         triggerExplosion(pos.clone());
         rocket.visible = false;
+        if (owoSound.isPlaying) owoSound.stop();
+        if (crashSound.isPlaying) crashSound.stop();
+        crashSound.play();
         break;
       } else if (_shipOffset.subVectors(a.position, pos).dot(_forward) < -30) {
         spawnAsteroid(a);
+      }
+    }
+
+    // owos
+    for (const o of owoWhatAreThese) {
+      o.userData.phase += dt * 0.8;
+      if (o.userData.billboardMode) {
+        // Face the camera
+        o.lookAt(camera.position);
+      } else {
+        o.rotation.x += dt * 0.5;
+        o.rotation.z += dt * 0.3;
+      }
+      o.position.y = o.userData.baseY + Math.sin(o.userData.phase) * 0.4;
+      if (pos.distanceTo(o.position) < 2) {
+        // Play owo sound
+        if (owoSound.isPlaying) owoSound.stop();
+        owoSound.play();
+        // Respawn the owo
+        spawnOwoWhatsThis(o);
+      } else if (_shipOffset.subVectors(o.position, pos).dot(_forward) < -30) {
+        spawnOwoWhatsThis(o);
+      }
+    }
+
+    // tomatoes
+    for (const t of tomatoes) {
+      t.userData.phase += dt * 0.8;
+      if (t.userData.billboardMode) {
+        // Face the camera
+        t.lookAt(camera.position);
+      } else {
+        t.rotation.x += dt * 0.5;
+        t.rotation.z += dt * 0.3;
+      }
+      t.position.y = t.userData.baseY + Math.sin(t.userData.phase) * 0.4;
+      if (pos.distanceTo(t.position) < 2) {
+        // spawn a screen splat for tomato hits
+        spawnSplat();
+        // Respawn the tomato (no sound)
+        spawnTomato(t);
+      } else if (_shipOffset.subVectors(t.position, pos).dot(_forward) < -30) {
+        spawnTomato(t);
       }
     }
 
@@ -383,8 +519,53 @@ export async function init(canvas: HTMLCanvasElement, state: GameState) {
     gameTime = 0;
     explodePoints.visible = false;
     explodeTimer = 0;
-    for (const t of targets) spawnBox(t);
-    for (const a of asteroids) spawnAsteroid(a);
+
+    // clean up existing obstacle meshes and clear arrays so we respawn fresh ones
+    try {
+      for (const m of targets) {
+        if (m) {
+          scene.remove(m);
+          try { if (m.geometry) m.geometry.dispose(); } catch (e) {}
+          try { if ((m.material as any)) (m.material as any).dispose(); } catch (e) {}
+        }
+      }
+      for (const a of asteroids) {
+        if (a) {
+          scene.remove(a);
+          try { a.traverse((o: any) => { if (o.isMesh) { if (o.geometry) o.geometry.dispose(); if (o.material) (o.material as any).dispose(); } }); } catch (e) {}
+        }
+      }
+      for (const o of owoWhatAreThese) {
+        if (o) {
+          scene.remove(o);
+          try { if (o.geometry) o.geometry.dispose(); } catch (e) {}
+          try { if ((o.material as any)) (o.material as any).dispose(); } catch (e) {}
+        }
+      }
+      for (const t of tomatoes) {
+        if (t) {
+          scene.remove(t);
+          try { t.traverse((o: any) => { if (o.isMesh) { if (o.geometry) o.geometry.dispose(); if (o.material) (o.material as any).dispose(); } }); } catch (e) {}
+        }
+      }
+    } catch (e) {
+      // ignore cleanup errors
+    }
+
+    targets.length = 0;
+    asteroids.length = 0;
+    owoWhatAreThese.length = 0;
+    tomatoes.length = 0;
+
+    // reset spawn state pointers so obstacles spawn near player
+    resetSpawnState();
+
+    // respawn initial obstacles
+    for (let i = 0; i < 16; i++) spawnBox();
+    for (let i = 0; i < 10; i++) spawnAsteroid();
+    for (let i = 0; i < 2; i++) spawnOwoWhatsThis();
+    for (let i = 0; i < 8; i++) spawnTomato();
+
     state.restart();
   }
 
